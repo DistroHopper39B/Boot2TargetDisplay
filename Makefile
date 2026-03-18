@@ -16,13 +16,13 @@ LDFLAGS = -subsystem:efi_application -nodefaultlib -dll
 
 .PHONY: all clean
 
-OBJS := boot2target.o
+OBJS := boot2target.o smc.o
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(TARGET): $(OBJS)
-	$(LD) $(LDFLAGS) -entry:EfiMain $< -out:$@
+	$(LD) $(LDFLAGS) -entry:EfiMain $^ -out:$@
 
 all: $(TARGET)
 

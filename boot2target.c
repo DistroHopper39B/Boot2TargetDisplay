@@ -6,30 +6,19 @@ EFI_HANDLE          gImageHandle;
 EFI_SYSTEM_TABLE    *gST;
 EFI_BOOT_SERVICES   *gBS;
 
-EFI_GUID gAppleSmcIoProtocolGuid = APPLE_SMC_IO_PROTOCOL_GUID;
-
-#define SMC_KEY_MVHR SMC_MAKE_KEY('M', 'V', 'H', 'R')
-#define SMC_KEY_MVMR SMC_MAKE_KEY('M', 'V', 'M', 'R')
-
-// FIXME: This will pin the CPU, we should use timers or something
-void Sleep(UINT32 Seconds)
-{
-    gBS->Stall(Seconds * 1000000);
-}
-
 EFI_STATUS EFIAPI EfiMain(
         IN EFI_HANDLE ImageHandle,
         IN EFI_SYSTEM_TABLE *SystemTable)
 {
     EFI_STATUS              Status;
     APPLE_SMC_IO_PROTOCOL   *SmcIo = NULL;
-    SMC_DATA                Value;
+    BOOLEAN                 TargetDisplayEnabled = FALSE;
 
     gST = SystemTable;
     gBS = SystemTable->BootServices;
     gImageHandle = ImageHandle;
 
-    /* Disable watchdog timer */
+    /* Disable watchdog timer so we don't auto-reboot after 5 minutes */
     gBS->SetWatchdogTimer(0, 0, 0, NULL);
 
     /* Find Apple SMC I/O protocol */
@@ -42,50 +31,74 @@ EFI_STATUS EFIAPI EfiMain(
     if (EFI_ERROR(Status))
     {
         gST->ConOut->OutputString(gST->ConOut, L"Cannot find SMC I/O protocol!\r\n");
-        while (1);
+        return Status;
     }
-
-    /*
-     * Enable TDM: 1
-     * Disable TDM: 0
-     */
-    Value = 1;
-
-    Status = SmcIo->SmcWriteValue(
-            SmcIo,
-            SMC_KEY_MVHR,
-            sizeof(Value),
-            &Value
-            );
-
-    if (EFI_ERROR(Status))
-    {
-        gST->ConOut->OutputString(gST->ConOut, L"Cannot write first value to SMC!\r\n");
-        while (1);
-    }
-
-    Sleep(1);
-
-    /*
-     * Reset screen?
-     */
-    Value = 2;
-
-    Status = SmcIo->SmcWriteValue(
-            SmcIo,
-            SMC_KEY_MVMR,
-            sizeof(Value),
-            &Value
-            );
-
-    if (EFI_ERROR(Status))
-    {
-        gST->ConOut->OutputString(gST->ConOut, L"Cannot write second value to SMC!\r\n");
-        while (1);
-    }
-
-    gST->ConOut->OutputString(gST->ConOut, L"Ideally this should be invisible.\r\n");
 
     /* FIXME: Use timers */
-    while (1);
+    while (1)
+    {
+        if (TdmIsCableConnected(SmcIo))
+        {
+            if (!TargetDisplayEnabled)
+            {
+                Status = TdmToggle(SmcIo, TRUE);
+                if (EFI_ERROR(Status))
+                {
+                    gST->ConOut->OutputString(gST->ConOut, L"Cannot enable Target Display Mode!\r\n");
+                    break;
+                }
+
+                gBS->Stall(250000);
+
+                Status = TdmResetLcd(SmcIo);
+                if (EFI_ERROR(Status))
+                {
+                    gST->ConOut->OutputString(gST->ConOut, L"Cannot reset display!\r\n");
+                    break;
+                }
+
+                TargetDisplayEnabled = TRUE;
+            }
+        }
+        else
+        {
+            /* Cable no longer connected */
+            if (TargetDisplayEnabled)
+            {
+                /* This code doesn't seem to reset the screen properly, might be impossible while in EFI */
+                /*
+                gBS->Stall(1000000);
+
+                Status = TdmToggle(SmcIo, FALSE);
+                if (EFI_ERROR(Status))
+                {
+                    gST->ConOut->OutputString(gST->ConOut, L"Cannot disable Target Display Mode!\r\n");
+                    break;
+                }
+
+                gBS->Stall(500000);
+
+                Status = TdmResetLcd(SmcIo);
+                if (EFI_ERROR(Status))
+                {
+                    gST->ConOut->OutputString(gST->ConOut, L"Cannot reset display!\r\n");
+                    break;
+                }
+
+
+                TargetDisplayEnabled = FALSE;
+                */
+
+                gST->RuntimeServices->ResetSystem(EfiResetCold, EFI_SUCCESS, 0, NULL);
+            }
+
+            gST->ConOut->OutputString(gST->ConOut, L"No signal\r\n");
+        }
+
+        gBS->Stall(500000);
+    }
+
+    /* We broke out of the loop, error out */
+    gST->ConOut->OutputString(gST->ConOut, L"Something went wrong (see above)\r\n");
+    return EFI_INVALID_PARAMETER;
 }

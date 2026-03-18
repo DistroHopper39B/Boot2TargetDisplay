@@ -15,7 +15,7 @@ You need Clang and lld-link, once you have those just type `make`.
 
 ## To-do
 * Don't pin a CPU core while Boot2Target is running
-* Display auto-detection
+* ~~Display auto-detection~~ kinda, we can now hotplug the display connector but we can't return to EFI
 * Possibly put the iMac CPU to sleep to minimize heat output (not sure if this is possible, I'd
 have to experiment in Linux)
 
