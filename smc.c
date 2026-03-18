@@ -29,12 +29,14 @@ BOOLEAN TdmIsCableConnected(
     }
 
     /* i REFUSE to implement a proper print function. */
+#if 0
     CHAR8 NumChar = (CHAR8) Value + 0x30;
     CHAR16 NumWChar[3];
     NumWChar[0] = NumChar;
     NumWChar[1] = L' ';
-    NumWChar[1] = L'\0';
+    NumWChar[2] = L'\0';
     gST->ConOut->OutputString(gST->ConOut, NumWChar);
+#endif
 
     return (Value != 3) ? TRUE : FALSE;
 }
