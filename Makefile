@@ -3,6 +3,11 @@
 TARGET = Boot2TargetDisplay.efi
 TARGET_LIB = Boot2TargetDisplay.lib
 
+VERSION_MAJOR = 0
+VERSION_MINOR = 1
+VERSION_PATCH = 0
+
+DEFINES = -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_PATCH=$(VERSION_PATCH)
 
 CC = clang
 CFLAGS = -Iinclude \
@@ -13,7 +18,8 @@ CFLAGS = -Iinclude \
 		-fno-stack-protector \
 		-fshort-wchar \
 		-mno-red-zone \
-		-Wall
+		-Wall \
+		$(DEFINES)
 
 LD = lld-link
 LDFLAGS = -subsystem:efi_application -nodefaultlib -dll

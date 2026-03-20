@@ -72,6 +72,11 @@ EfiMain(
         goto Fail;
     }
 
+    printf("Boot2TargetDisplay %d.%d", VERSION_MAJOR, VERSION_MINOR);
+    if (VERSION_PATCH != 0) printf(".%d", VERSION_PATCH);
+    printf("\n");
+    printf("Copyright 2026 Sylas Hollander.\n");
+
     printf("Waiting for cable connection...\n");
 
     /* FIXME: Use timers */
@@ -80,7 +85,7 @@ EfiMain(
         Status = TdmIsCableConnected(SmcIo, &CableConnected);
         if (EFI_ERROR(Status))
         {
-            printf("Unsupported device!\n");
+            printf("Unsupported device! Please note that Thunderbolt iMacs are not currently supported.\n");
             break;
         }
 
