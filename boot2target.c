@@ -118,6 +118,7 @@ EfiMain(
             if (TargetDisplayEnabled)
             {
                 /* This code doesn't seem to reset the screen properly, might be impossible while in EFI */
+#if 0
                 gBS->Stall(1000000);
 
                 Status = TdmToggle(SmcIo, FALSE);
@@ -135,6 +136,7 @@ EfiMain(
                     printf("Cannot reset display!\n");
                     break;
                 }
+#endif
 
                 TargetDisplayEnabled = FALSE;
             }
