@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 TARGET = Boot2TargetDisplay.efi
+TARGET_LIB = Boot2TargetDisplay.lib
+
+
 CC = clang
 CFLAGS = -Iinclude \
 		-Iinclude/uefi \
@@ -11,12 +14,13 @@ CFLAGS = -Iinclude \
 		-fshort-wchar \
 		-mno-red-zone \
 		-Wall
+
 LD = lld-link
 LDFLAGS = -subsystem:efi_application -nodefaultlib -dll
 
 .PHONY: all clean
 
-OBJS := boot2target.o smc.o
+OBJS := boot2target.o smc.o cons.o baselibc_string.o tinyprintf.o
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -27,4 +31,4 @@ $(TARGET): $(OBJS)
 all: $(TARGET)
 
 clean:
-	rm -f $(TARGET) $(OBJS)
+	rm -f $(TARGET) $(TARGET_LIB) $(OBJS)

@@ -9,10 +9,18 @@
 #include <Protocol/GraphicsOutput.h>
 
 /* Apple SMC protocol */
-#include "smc_io.h"
+#include "AppleSmcIo.h"
 
-BOOLEAN TdmIsCableConnected(
-        APPLE_SMC_IO_PROTOCOL *SmcIo
+/* Apple variable protocol */
+
+/* Print support */
+#include "tinyprintf.h"
+#include "cons.h"
+
+
+EFI_STATUS TdmIsCableConnected(
+        APPLE_SMC_IO_PROTOCOL *SmcIo,
+        BOOLEAN *IsConnected
 );
 
 EFI_STATUS TdmToggle(
@@ -23,3 +31,8 @@ EFI_STATUS TdmToggle(
 EFI_STATUS TdmResetLcd(
         APPLE_SMC_IO_PROTOCOL *SmcIo
 );
+
+BOOLEAN
+InitializeConsole(
+    VOID
+    );
